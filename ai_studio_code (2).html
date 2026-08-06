@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islam Mohamed | Professional Web Designer Portfolio</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Tajawal:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #00f2fe;
+            --secondary-color: #4facfe;
+            --accent-glow: rgba(0, 242, 254, 0.3);
+            --bg-dark: #070913;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --text-muted: #a0a5c0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        /* 3D Canvas Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Header & Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            font-size: 0.95rem;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        .lang-select {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            font-weight: 600;
+        }
+
+        .lang-select option {
+            background: var(--bg-dark);
+            color: #fff;
+        }
+
+        /* General Sections */
+        section {
+            padding: 100px 8%;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            position: relative;
+            font-weight: 800;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 14px 38px;
+            border-radius: 30px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: #000;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 242, 254, 0.6);
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            margin-bottom: 20px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        /* Stats Counter Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+            width: 100%;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .skill-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .skill-card i {
+            font-size: 40px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .skill-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .skill-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Portfolio Section */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-color);
+        }
+
+        .project-img {
+            width: 100%;
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .project-info {
+            padding: 25px;
+        }
+
+        .project-info h3 {
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+        }
+
+        .project-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Contact Section */
+        .contact-container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Floating WhatsApp Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 32px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.12);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 25px;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            background: rgba(7, 9, 19, 0.9);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            header { padding: 15px 5%; }
+            nav { gap: 15px; }
+            section { padding: 70px 5%; }
+            .whatsapp-float { bottom: 20px; right: 20px; width: 55px; height: 55px; font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Header / Navigation -->
+    <header>
+        <div class="logo" id="logo-text">إسلام محمد</div>
+        <nav>
+            <a href="#about" id="nav-about">عني</a>
+            <a href="#skills" id="nav-skills">المهارات</a>
+            <a href="#portfolio" id="nav-portfolio">الأعمال</a>
+            <a href="#contact" id="nav-contact">تواصل معي</a>
+            <select class="lang-select" id="langSwitcher" onchange="changeLanguage(this.value)">
+                <option value="ar" selected>العربية</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+            </select>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1 id="hero-title">مرحباً، أنا إسلام محمد</h1>
+        <p id="hero-subtitle">مصمم مواقع محترف بخبرة سنوات في إنشاء تجارب رقمية فاخرة وتصاميم حديثة عالية الأداء.</p>
+        <a href="#portfolio" class="btn" id="hero-btn">استعرض أعمالي</a>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <h2 class="section-title" id="about-title">عني</h2>
+        <div class="glass-card">
+            <p style="font-size: 1.15rem; line-height: 1.9; color: var(--text-muted); text-align: center;" id="about-desc">
+                أنا مصمم مواقع شغوف ممتد بخبرة لسنوات طويلة في سوق العمل. أركز على ابتكار واجهات المستخدم (UI/UX) الاستثنائية التي تجمع بين الجمالية البصرية والتجاوب الكامل مع جميع الأجهزة. هدفي تحويل أفكار الشركات والأفراد إلى واقع رقمي ملموس يزيد من مبيعاتهم ويعزز حضورهم عبر الإنترنت.
+            </p>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">+5</div>
+                    <div class="stat-label" id="stat-exp">سنوات خبرة</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">+60</div>
+                    <div class="stat-label" id="stat-proj">مشروع مكتمل</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label" id="stat-sat">رضا العملاء</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <h2 class="section-title" id="skills-title">مهاراتي الاحترافية</h2>
+        <div class="skills-grid">
+            <div class="skill-card">
+                <i class="fas fa-paint-brush"></i>
+                <h3 id="sk1-title">تصميم UI/UX</h3>
+                <p id="sk1-desc">ابتكار واجهات مستخدم مذهلة وسهلة الاستخدام تهتم بجميع تفاصيل تجربة الزائر.</p>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-code"></i>
+                <h3 id="sk2-title">تطوير الويب الحديث</h3>
+                <p id="sk2-desc">كتابة أكواد نظيفة وسريعة التجاوب باستخدام أحدث التقنيات لضمان أداء عالٍ.</p>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h3 id="sk3-title">التجاوب مع الشاشات</h3>
+                <p id="sk3-desc">ضمان ظهور الموقع بشكل مثالي وجذاب على الهواتف، الأجهزة اللوحية، والحواسيب.</p>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-cubes"></i>
+                <h3 id="sk4-title">التأثيرات ثلاثية الأبعاد</h3>
+                <p id="sk4-desc">دمج خلفيات ومؤثرات 3D تفاعلية تجعل موقعك فريداً ومميزاً عن باقي المنافسين.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio">
+        <h2 class="section-title" id="portfolio-title">معرض الأعمال</h2>
+        <div class="portfolio-grid">
+            <!-- Project 1 -->
+            <div class="project-card">
+                <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="project-info">
+                    <h3 id="p1-title">منصة تجارة إلكترونية فاخرة</h3>
+                    <p id="p1-desc">تصميم واجهة متجر إلكتروني عالي السرعة وتفاعلي يتيح تجربة تسوق سلسة مع نظام سلة مبتكر.</p>
+                </div>
+            </div>
+            <!-- Project 2 -->
+            <div class="project-card">
+                <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="project-info">
+                    <h3 id="p2-title">لوحة تحكم وتحليلات ذكية</h3>
+                    <p id="p2-desc">واجهة مستخدم معقدة لعرض البيانات والتحليلات البيانية بشكل عصري ومريح للعين.</p>
+                </div>
+            </div>
+            <!-- Project 3 -->
+            <div class="project-card">
+                <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80');"></div>
+                <div class="project-info">
+                    <h3 id="p3-title">موقع شركة استشارات</h3>
+                    <p id="p3-desc">تصميم موقع تعريفي رسمي للشركات يعكس الثقة والاحترافية بخلفيات وتأثيرات بصرية مميزة.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <h2 class="section-title" id="contact-title">تواصل معي</h2>
+        <div class="glass-card contact-container">
+            <!-- Formspree Form Connected to Your Endpoint -->
+            <form id="contactForm" action="https://formspree.io/f/mgawvowp" method="POST">
+                <div class="form-group">
+                    <label id="lbl-name" for="name">الاسم كامل</label>
+                    <input type="text" id="name" name="name" required placeholder="أدخل اسمك الكريم">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-email" for="email">البريد الإلكتروني</label>
+                    <input type="email" id="email" name="email" required placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-msg" for="message">الرسالة</label>
+                    <textarea id="message" name="message" rows="5" required placeholder="اكتب تفاصيل مشروعك هنا..."></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;" id="btn-submit">إرسال الرسالة</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/201069452329?text=مرحباً%20إسلام،%20أود%20الاستفسار%20عن%20خدمات%20تصميم%20المواقع" class="whatsapp-float" target="_blank" title="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer>
+        <p>© <span id="year"></span> إسلام محمد - جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // Update year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // -------------------------------------------------------------
+        // 1. Interactive 3D Canvas Particles Setup (Three.js Engine)
+        // -------------------------------------------------------------
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const particlesCount = 750;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 15;
+        }
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.032,
+            color: 0x00f2fe,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 3;
+
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const elapsedTime = clock.getElapsedTime();
+
+            particlesMesh.rotation.y = elapsedTime * 0.05;
+            particlesMesh.rotation.x = -mouseY * 0.4;
+            particlesMesh.rotation.y += mouseX * 0.4;
+
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // -------------------------------------------------------------
+        // 2. Multilingual System Data & Engine (AR, EN, FR, DE)
+        // -------------------------------------------------------------
+        const translations = {
+            ar: {
+                dir: 'rtl',
+                logo: 'إسلام محمد',
+                navAbout: 'عني',
+                navSkills: 'المهارات',
+                navPortfolio: 'الأعمال',
+                navContact: 'تواصل معي',
+                heroTitle: 'مرحباً، أنا إسلام محمد',
+                heroSubtitle: 'مصمم مواقع محترف بخبرة سنوات في إنشاء تجارب رقمية فاخرة وتصاميم حديثة عالية الأداء.',
+                heroBtn: 'استعرض أعمالي',
+                aboutTitle: 'عني',
+                aboutDesc: 'أنا مصمم مواقع شغوف ممتد بخبرة لسنوات طويلة في سوق العمل. أركز على ابتكار واجهات المستخدم (UI/UX) الاستثنائية التي تجمع بين الجمالية البصرية والتجاوب الكامل مع جميع الأجهزة. هدفي تحويل أفكار الشركات والأفراد إلى واقع رقمي ملموس يزيد من مبيعاتهم ويعزز حضورهم عبر الإنترنت.',
+                statExp: 'سنوات خبرة',
+                statProj: 'مشروع مكتمل',
+                statSat: 'رضا العملاء',
+                skillsTitle: 'مهاراتي الاحترافية',
+                sk1Title: 'تصميم UI/UX',
+                sk1Desc: 'ابتكار واجهات مستخدم مذهلة وسهلة الاستخدام تهتم بجميع تفاصيل تجربة الزائر.',
+                sk2Title: 'تطوير الويب الحديث',
+                sk2Desc: 'كتابة أكواد نظيفة وسريعة التجاوب باستخدام أحدث التقنيات لضمان أداء عالٍ.',
+                sk3Title: 'التجاوب مع الشاشات',
+                sk3Desc: 'ضمان ظهور الموقع بشكل مثالي وجذاب على الهواتف، الأجهزة اللوحية، والحواسيب.',
+                sk4Title: 'التأثيرات ثلاثية الأبعاد',
+                sk4Desc: 'دمج خلفيات ومؤثرات 3D تفاعلية تجعل موقعك فريداً ومميزاً عن باقي المنافسين.',
+                portfolioTitle: 'معرض الأعمال',
+                p1Title: 'منصة تجارة إلكترونية فاخرة',
+                p1Desc: 'تصميم واجهة متجر إلكتروني عالي السرعة وتفاعلي يتيح تجربة تسوق سلسة مع نظام سلة مبتكر.',
+                p2Title: 'لوحة تحكم وتحليلات ذكية',
+                p2Desc: 'واجهة مستخدم معقدة لعرض البيانات والتحليلات البيانية بشكل عصري ومريح للعين.',
+                p3Title: 'موقع شركة استشارات',
+                p3Desc: 'تصميم موقع تعريفي رسمي للشركات يعكس الثقة والاحترافية بخلفيات وتأثيرات بصرية مميزة.',
+                contactTitle: 'تواصل معي',
+                lblName: 'الاسم كامل',
+                lblEmail: 'البريد الإلكتروني',
+                lblMsg: 'الرسالة',
+                btnSubmit: 'إرسال الرسالة',
+                namePlaceholder: 'أدخل اسمك الكريم',
+                emailPlaceholder: 'name@example.com',
+                msgPlaceholder: 'اكتب تفاصيل مشروعك هنا...'
+            },
+            en: {
+                dir: 'ltr',
+                logo: 'Islam Mohamed',
+                navAbout: 'About',
+                navSkills: 'Skills',
+                navPortfolio: 'Portfolio',
+                navContact: 'Contact',
+                heroTitle: 'Hi, I am Islam Mohamed',
+                heroSubtitle: 'Professional Web Designer with years of experience building premium, high-performance digital web experiences.',
+                heroBtn: 'View Portfolio',
+                aboutTitle: 'About Me',
+                aboutDesc: 'I am a passionate Web Designer with years of industry experience. I focus on creating exceptional UI/UX interfaces that blend aesthetic beauty with seamless responsiveness across all devices. My goal is to turn concepts into dynamic digital realities.',
+                statExp: 'Years Experience',
+                statProj: 'Projects Completed',
+                statSat: 'Client Satisfaction',
+                skillsTitle: 'My Professional Skills',
+                sk1Title: 'UI/UX Design',
+                sk1Desc: 'Creating stunning and user-friendly web interfaces focused on every detail of the user journey.',
+                sk2Title: 'Modern Web Development',
+                sk2Desc: 'Writing clean and responsive code using cutting-edge technologies for top performance.',
+                sk3Title: 'Responsive Design',
+                sk3Desc: 'Ensuring your site looks flawless across mobile devices, tablets, and desktop computers.',
+                sk4Title: '3D Interactive Effects',
+                sk4Desc: 'Integrating dynamic 3D elements making your website stand out from competitors.',
+                portfolioTitle: 'Portfolio',
+                p1Title: 'Luxury E-Commerce Platform',
+                p1Desc: 'A high-speed interactive e-commerce interface providing a smooth shopping experience with a modern cart system.',
+                p2Title: 'Smart Analytics Dashboard',
+                p2Desc: 'A complex UI for rendering data and graphical analytics in a sleek, modern, user-friendly style.',
+                p3Title: 'Corporate Agency Website',
+                p3Desc: 'An official corporate website design built to reflect trust and professionalism with stunning visual effects.',
+                contactTitle: 'Contact Me',
+                lblName: 'Full Name',
+                lblEmail: 'Email Address',
+                lblMsg: 'Your Message',
+                btnSubmit: 'Send Message',
+                namePlaceholder: 'Enter your full name',
+                emailPlaceholder: 'name@example.com',
+                msgPlaceholder: 'Write your project details here...'
+            },
+            fr: {
+                dir: 'ltr',
+                logo: 'Islam Mohamed',
+                navAbout: 'À propos',
+                navSkills: 'Compétences',
+                navPortfolio: 'Portfolio',
+                navContact: 'Contact',
+                heroTitle: 'Bonjour, je suis Islam Mohamed',
+                heroSubtitle: 'Concepteur Web professionnel avec des années d\'expérience dans la création d\'expériences numériques premium.',
+                heroBtn: 'Voir le Portfolio',
+                aboutTitle: 'À Propos',
+                aboutDesc: 'Concepteur web passionné avec plusieurs années d\'expérience. Je me spécialise dans la création d\'interfaces UI/UX exceptionnelles qui allient esthétique et réactivité optimale sur tous les appareils.',
+                statExp: 'Années d\'Expérience',
+                statProj: 'Projets Réalisés',
+                statSat: 'Satisfaction Clients',
+                skillsTitle: 'Mes Compétences',
+                sk1Title: 'Design UI/UX',
+                sk1Desc: 'Création d\'interfaces web époustouflantes axées sur l\'expérience utilisateur.',
+                sk2Title: 'Développement Web Moderne',
+                sk2Desc: 'Code propre et réactif utilisant les dernières technologies web.',
+                sk3Title: 'Design Adaptatif',
+                sk3Desc: 'Garantir un affichage parfait sur mobiles, tablettes et ordinateurs de bureau.',
+                sk4Title: 'Effets 3D Interactifs',
+                sk4Desc: 'Intégration d\'éléments 3D dynamiques pour démarquer votre site.',
+                portfolioTitle: 'Mes Projets',
+                p1Title: 'Plateforme E-Commerce de Luxe',
+                p1Desc: 'Interface e-commerce interactive et rapide offrant une expérience d\'achat fluide avec un panier moderne.',
+                p2Title: 'Tableau de Bord Analytique',
+                p2Desc: 'Interface complexe pour l\'affichage de données et d\'analyses graphiques de manière élégante.',
+                p3Title: 'Site Web d\'Entreprise',
+                p3Desc: 'Design officiel d\'entreprise conçu pour refléter la confiance et le professionnel avec des effets visuels.',
+                contactTitle: 'Contactez-moi',
+                lblName: 'Nom Complet',
+                lblEmail: 'Adresse Email',
+                lblMsg: 'Votre Message',
+                btnSubmit: 'Envoyer le Message',
+                namePlaceholder: 'Entrez votre nom',
+                emailPlaceholder: 'nom@exemple.com',
+                msgPlaceholder: 'Écrivez les détails de votre projet...'
+            },
+            de: {
+                dir: 'ltr',
+                logo: 'Islam Mohamed',
+                navAbout: 'Über mich',
+                navSkills: 'Fähigkeiten',
+                navPortfolio: 'Portfolio',
+                navContact: 'Kontakt',
+                heroTitle: 'Hallo, ich bin Islam Mohamed',
+                heroSubtitle: 'Professioneller Webdesigner mit jahrelanger Erfahrung in der Erstellung erstklassiger digitaler Erlebnisse.',
+                heroBtn: 'Portfolio Ansehen',
+                aboutTitle: 'Über Mich',
+                aboutDesc: 'Ich bin ein leidenschaftlicher Webdesigner mit jahrelanger Erfahrung. Ich konzentriere mich auf die Erstellung außergewöhnlicher UI/UX-Benutzeroberflächen, die Ästhetik und Reaktionsfähigkeit vereinen.',
+                statExp: 'Jahre Erfahrung',
+                statProj: 'Abgeschlossene Projekte',
+                statSat: 'Kundenzufriedenheit',
+                skillsTitle: 'Meine Fähigkeiten',
+                sk1Title: 'UI/UX Design',
+                sk1Desc: 'Erstellung atemberaubender und benutzerfreundlicher Weboberflächen.',
+                sk2Title: 'Moderne Webentwicklung',
+                sk2Desc: 'Sauberer und reaktionsschneller Code mit neuesten Technologien.',
+                sk3Title: 'Responsive Design',
+                sk3Desc: 'Perfekte Darstellung auf Mobilgeräten, Tablets und Desktops.',
+                sk4Title: 'Interaktive 3D-Effekte',
+                sk4Desc: 'Integration dynamischer 3D-Elemente für einen einzigartigen Auftritt.',
+                portfolioTitle: 'Mein Portfolio',
+                p1Title: 'Luxus E-Commerce Plattform',
+                p1Desc: 'Interaktive E-Commerce-Benutzeroberfläche für ein reibungsloses Einkaufserlebnis.',
+                p2Title: 'Smart Analytics Dashboard',
+                p2Desc: 'Komplexe Benutzeroberfläche zur eleganten Darstellung von Daten und grafischen Analysen.',
+                p3Title: 'Unternehmens-Website',
+                p3Desc: 'Offizielles Design für Unternehmen, das Vertrauen und Professionalität ausstrahlt.',
+                contactTitle: 'Kontaktieren Sie Mich',
+                lblName: 'Vollständiger Name',
+                lblEmail: 'E-Mail-Adresse',
+                lblMsg: 'Ihre Nachricht',
+                btnSubmit: 'Nachricht Senden',
+                namePlaceholder: 'Geben Sie Ihren Namen ein',
+                emailPlaceholder: 'name@beispiel.com',
+                msgPlaceholder: 'Schreiben Sie Ihre Projektdetails...'
+            }
+        };
+
+        function changeLanguage(lang) {
+            const data = translations[lang];
+            document.documentElement.dir = data.dir;
+            document.documentElement.lang = lang;
+
+            document.getElementById('logo-text').textContent = data.logo;
+            document.getElementById('nav-about').textContent = data.navAbout;
+            document.getElementById('nav-skills').textContent = data.navSkills;
+            document.getElementById('nav-portfolio').textContent = data.navPortfolio;
+            document.getElementById('nav-contact').textContent = data.navContact;
+            
+            document.getElementById('hero-title').textContent = data.heroTitle;
+            document.getElementById('hero-subtitle').textContent = data.heroSubtitle;
+            document.getElementById('hero-btn').textContent = data.heroBtn;
+
+            document.getElementById('about-title').textContent = data.aboutTitle;
+            document.getElementById('about-desc').textContent = data.aboutDesc;
+            document.getElementById('stat-exp').textContent = data.statExp;
+            document.getElementById('stat-proj').textContent = data.statProj;
+            document.getElementById('stat-sat').textContent = data.statSat;
+
+            document.getElementById('skills-title').textContent = data.skillsTitle;
+            document.getElementById('sk1-title').textContent = data.sk1Title;
+            document.getElementById('sk1-desc').textContent = data.sk1Desc;
+            document.getElementById('sk2-title').textContent = data.sk2Title;
+            document.getElementById('sk2-desc').textContent = data.sk2Desc;
+            document.getElementById('sk3-title').textContent = data.sk3Title;
+            document.getElementById('sk3-desc').textContent = data.sk3Desc;
+            document.getElementById('sk4-title').textContent = data.sk4Title;
+            document.getElementById('sk4-desc').textContent = data.sk4Desc;
+
+            document.getElementById('portfolio-title').textContent = data.portfolioTitle;
+            document.getElementById('p1-title').textContent = data.p1Title;
+            document.getElementById('p1-desc').textContent = data.p1Desc;
+            document.getElementById('p2-title').textContent = data.p2Title;
+            document.getElementById('p2-desc').textContent = data.p2Desc;
+            document.getElementById('p3-title').textContent = data.p3Title;
+            document.getElementById('p3-desc').textContent = data.p3Desc;
+
+            document.getElementById('contact-title').textContent = data.contactTitle;
+            document.getElementById('lbl-name').textContent = data.lblName;
+            document.getElementById('lbl-email').textContent = data.lblEmail;
+            document.getElementById('lbl-msg').textContent = data.lblMsg;
+            document.getElementById('btn-submit').textContent = data.btnSubmit;
+
+            document.getElementById('name').placeholder = data.namePlaceholder;
+            document.getElementById('email').placeholder = data.emailPlaceholder;
+            document.getElementById('message').placeholder = data.msgPlaceholder;
+        }
+    </script>
+</body>
+</html>
