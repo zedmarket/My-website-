@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>مؤقت MedReminder - منظم ومذكر الأدوية الشامل</title>
+  <meta name="description" content="تطبيق مستقل لتنظيم مواعيد الأدوية والتذكير الصوتي الناطق يعمل بالكامل دون الحاجة للإنترنت." />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ltr-mode { font-family: 'Inter', system-ui, sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .bento-card { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .bento-card:hover { transform: translateY(-2px); }
+  </style>
+<script src="/_aistudio-iframe.js?v=2f1c016a"></script></head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-24 transition-colors">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-4 py-3 shadow-xs">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xl font-black shadow-md shadow-emerald-500/20">
+          💊
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-black tracking-tight flex items-center gap-1.5">
+            <span id="txt-app-title">مؤقت MedReminder</span>
+            <span class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">Offline Pro</span>
+          </h1>
+          <p id="live-datetime" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400"></p>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="toggleLang()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-200 dark:border-slate-700">
+          <span id="lang-btn-txt">English</span>
+        </button>
+        <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-200 dark:border-slate-700">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <button onclick="openAddModal()" class="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition-all active:scale-95 cursor-pointer">
+          <span>+</span>
+          <span id="txt-add-btn">إضافة دواء</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= ACTIVE ALARM BANNER (DUE NOW) ================= -->
+  <div id="due-alarm-banner" class="hidden max-w-5xl mx-auto px-4 mt-4">
+    <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-3xl p-5 shadow-2xl animate-pulse border-2 border-white/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shrink-0">
+          ⏰
+        </div>
+        <div>
+          <span class="text-[11px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full" id="txt-alarm-due">حان موعد الجرعة الآن!</span>
+          <h3 id="due-alarm-title" class="text-base sm:text-lg font-black mt-1">بنادول 500 ملغ</h3>
+          <p id="due-alarm-notes" class="text-xs text-emerald-100"></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button id="btn-due-take" class="flex-1 sm:flex-none px-5 py-2.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl text-xs font-extrabold shadow-md cursor-pointer transition-all active:scale-95">
+          ✅ تم أخذ الجرعة
+        </button>
+        <button id="btn-due-snooze" class="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-800/80 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold cursor-pointer transition-all">
+          ⏳ تذكير (10د)
+        </button>
+        <button id="btn-due-skip" class="px-3 py-2.5 bg-emerald-900/60 hover:bg-emerald-950 text-white/80 rounded-xl text-xs font-bold cursor-pointer">
+          تخطي
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-5xl mx-auto px-4 py-6">
+
+    <!-- TAB 1: HOME DASHBOARD -->
+    <section id="tab-home" class="space-y-5">
+      <!-- Bento Grid Top Row -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        <!-- Next Medication Highlight Hero (8 Cols) -->
+        <div class="md:col-span-8 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+          <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+          
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span id="txt-next-med-badge">الجرعة القادمة</span>
+              </span>
+              <span id="next-med-badge-time" class="text-xs font-mono font-bold text-slate-500 dark:text-slate-400"></span>
+            </div>
+
+            <div id="next-med-content">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <div id="next-med-actions" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+            <!-- Buttons injected by JS -->
+          </div>
+        </div>
+
+        <!-- Adherence Gauge Bento Tile (4 Cols) -->
+        <div class="md:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider" id="txt-adherence-title">
+              الالتزام العلاجي
+            </h3>
+            <span class="text-emerald-600 dark:text-emerald-400 text-lg">📊</span>
+          </div>
+
+          <div class="my-4 text-center">
+            <div class="text-4xl font-black font-mono text-emerald-600 dark:text-emerald-400" id="adherence-percent">
+              100%
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1" id="adherence-status-desc">
+              مستوى ممتاز! استمر على جدولك بدقة
+            </p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 text-center bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-[11px]">
+            <div>
+              <span class="text-slate-400 block" id="txt-stat-taken">أُخذت</span>
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="stat-taken-count">0</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block" id="txt-stat-missed">فائتة</span>
+              <span class="font-bold text-rose-500 text-sm" id="stat-missed-count">0</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block" id="txt-stat-total">الكل</span>
+              <span class="font-bold text-slate-700 dark:text-slate-200 text-sm" id="stat-total-count">0</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Schedule of Today Section -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-slate-900 dark:text-white" id="txt-today-sched">
+              جدول جرعات اليوم
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400" id="txt-today-sched-desc">
+              جميع الأدوية المقررة لليوم مرتبة زمنياً
+            </p>
+          </div>
+          <button onclick="openAddModal()" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+            + <span id="txt-quick-add">إضافة دواء</span>
+          </button>
+        </div>
+
+        <div id="today-schedule-list" class="space-y-2.5">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MY MEDICATIONS -->
+    <section id="tab-medications" class="hidden space-y-5">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 dark:text-white" id="txt-my-meds-title">أدويتي المسجلة</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400" id="txt-my-meds-subtitle">إدارة وتعديل خطتك الدوائية ومتابعة المخزون</p>
+        </div>
+        <button onclick="openAddModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-md cursor-pointer transition-all active:scale-95">
+          + <span id="txt-btn-new-med">إضافة دواء جديد</span>
+        </button>
+      </div>
+
+      <div id="medications-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: CALENDAR & TIMELINE -->
+    <section id="tab-calendar" class="hidden space-y-5">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <h2 class="text-base font-extrabold text-slate-900 dark:text-white mb-1" id="txt-cal-title">تقويم الأدوية</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4" id="txt-cal-desc">استعراض الجرعات المجدولة والسابقة لكل أيام الأسبوع</p>
+        
+        <!-- Days bar -->
+        <div id="calendar-days-bar" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div id="calendar-day-doses" class="mt-6 space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-4">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DRUG GUIDE & FIRST AID -->
+    <section id="tab-guide" class="hidden space-y-5">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900 dark:text-white" id="txt-guide-title">دليل الأدوية الشائعة والإسعافات</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">معلومات سريرية سريعة وطرق الحفظ السليمة والتداخلات الدوائية</p>
+        
+        <input type="text" id="guide-search-input" oninput="filterGuideDrugs()" placeholder="ابحث عن دواء (بنادول، أوجمنتين، كونكور، ميتفورمين)..." class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+        
+        <div id="guide-drugs-list" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Emergency quick hotline banner -->
+      <div class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🚨</span>
+          <div>
+            <h4 class="text-xs font-black text-rose-900 dark:text-rose-200" id="txt-emg-title">أرقام الطوارئ السريعة</h4>
+            <p class="text-[11px] text-rose-700 dark:text-rose-300">في الحالات الحرجة اتصل بالإسعاف فوراً (123 / 997 / 911 / 112)</p>
+          </div>
+        </div>
+        <a href="tel:123" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm">
+          📞 الاتصال بالإسعاف
+        </a>
+      </div>
+    </section>
+
+    <!-- TAB 5: SETTINGS & BACKUP -->
+    <section id="tab-settings" class="hidden space-y-5 max-w-2xl mx-auto">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <h2 class="text-base font-extrabold text-slate-900 dark:text-white" id="txt-settings-heading">الإعدادات والتنبيه الصوتي</h2>
+
+        <!-- Alarm Voice / Sound Type -->
+        <div class="py-2 border-b border-slate-100 dark:border-slate-800">
+          <label class="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-2" id="txt-sound-type-label">نغمة التنبيه / الصوت الناطق</label>
+          <select id="setting-sound-type" onchange="saveSettingSoundType(this.value)" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none">
+            <option value="voice_ar">🎙️ صوت ناطق عربي (ينطق اسم الدواء والجرعة)</option>
+            <option value="voice_en">🎙️ Spoken English Voice (Name & Dose)</option>
+            <option value="bell">🔔 رنين كلاسيكي متناغم (Classic Bell)</option>
+            <option value="gentle">🎵 نغمة هادئة طبية (Gentle Melodic)</option>
+            <option value="digital">⚡ تنبيه رقمي حديث (Digital Pulse)</option>
+            <option value="urgent">🚨 نغمة حيوية ملحة (Urgent Alert)</option>
+          </select>
+        </div>
+
+        <!-- Notification Perm Test -->
+        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">إشعارات المتصفح والهاتف</span>
+            <span class="text-[10px] text-slate-500" id="notif-perm-status">الحالة: مفعلة</span>
+          </div>
+          <button onclick="requestNotificationPermission()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300">
+            طلب الإذن
+          </button>
+        </div>
+
+        <!-- Test Alarm Button -->
+        <button onclick="testAlarmDemo()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-extrabold shadow-md cursor-pointer transition-all active:scale-95">
+          🔊 تجربة صوت المنبه والناطق الآن
+        </button>
+      </div>
+
+      <!-- Backup & Restore Box -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">النسخ الاحتياطي والبيانات</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportBackupData()" class="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer">
+            📥 تصدير ملف النسخة (JSON)
+          </button>
+          <label class="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 text-center cursor-pointer">
+            📤 استيراد نسخة
+            <input type="file" accept=".json" onchange="importBackupData(event)" class="hidden" />
+          </label>
+        </div>
+        <button onclick="loadSampleDemoData()" class="w-full p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 rounded-2xl text-xs font-bold cursor-pointer">
+          ✨ تحميل بيانات تجريبية (Demo)
+        </button>
+      </div>
+
+      <!-- Single File Offline Badge -->
+      <div class="text-center p-4 text-xs text-slate-400 dark:text-slate-500">
+        MedReminder Standalone HTML • يعمل بالكامل محلياً بدون إنترنت 100%
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= ADD / EDIT MEDICATION MODAL ================= -->
+  <div id="med-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="modal-title" class="text-base font-extrabold text-slate-900 dark:text-white">إضافة دواء جديد</h3>
+        <button onclick="closeMedModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
+      </div>
+
+      <form id="med-form" onsubmit="handleSaveMedication(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="med-id" />
+
+        <!-- Name -->
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">اسم الدواء *</label>
+          <input type="text" id="form-name" required placeholder="مثال: باراسيتامول أو Panadol" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+        </div>
+
+        <!-- Dose & Form -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">الجرعة المقررة *</label>
+            <input type="text" id="form-dose" required placeholder="مثال: 500 ملغ قرص" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">شكل الدواء</label>
+            <select id="form-type" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none">
+              <option value="tablet">💊 قرص (Tablet)</option>
+              <option value="capsule">💊 كبسولة (Capsule)</option>
+              <option value="syrup">🧴 شراب (Syrup)</option>
+              <option value="drops">💧 قطرات (Drops)</option>
+              <option value="injection">💉 حقنة (Injection)</option>
+              <option value="inhaler">💨 بخاخ (Inhaler)</option>
+              <option value="cream">🧴 مرهم (Cream)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Schedule Times -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-bold text-slate-700 dark:text-slate-300">أوقات الجرعات اليومية *</label>
+            <button type="button" onclick="addTimeInput()" class="text-emerald-600 font-bold text-[11px] cursor-pointer">+ وقت إضافي</button>
+          </div>
+          <div id="form-times-container" class="space-y-2">
+            <!-- Dynamic time inputs -->
+          </div>
+        </div>
+
+        <!-- Stock & Quantity -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">الكمية المتوفرة (اختياري)</label>
+            <input type="number" id="form-quantity" min="0" placeholder="مثال: 30" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">تنبيه عند وصول المخزون</label>
+            <input type="number" id="form-threshold" min="1" placeholder="مثال: 5" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none" />
+          </div>
+        </div>
+
+        <!-- Doctor Instructions -->
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">ملاحظات الطبيب / تعليمات الأكل</label>
+          <input type="text" id="form-notes" placeholder="مثال: يؤخذ بعد الأكل مع كوب ماء وفير" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none" />
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2 flex gap-2">
+          <button type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md cursor-pointer active:scale-95 transition-all">
+            حفظ الدواء
+          </button>
+          <button type="button" onclick="closeMedModal()" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold cursor-pointer">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+  <div class="fixed bottom-3 left-0 right-0 z-40 px-3 flex justify-center pointer-events-none">
+    <nav class="pointer-events-auto max-w-md w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-1.5 shadow-2xl flex items-center justify-around">
+      <button onclick="switchTab('home')" id="nav-btn-home" class="nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] cursor-pointer">
+        <span class="text-base">🏠</span>
+        <span id="txt-nav-home">الرئيسية</span>
+      </button>
+      <button onclick="switchTab('medications')" id="nav-btn-medications" class="nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium text-[11px] cursor-pointer">
+        <span class="text-base">💊</span>
+        <span id="txt-nav-meds">أدويتي</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="nav-btn-calendar" class="nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium text-[11px] cursor-pointer">
+        <span class="text-base">📅</span>
+        <span id="txt-nav-cal">التقويم</span>
+      </button>
+      <button onclick="switchTab('guide')" id="nav-btn-guide" class="nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium text-[11px] cursor-pointer">
+        <span class="text-base">📖</span>
+        <span id="txt-nav-guide">الدليل</span>
+      </button>
+      <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium text-[11px] cursor-pointer">
+        <span class="text-base">⚙️</span>
+        <span id="txt-nav-settings">الإعدادات</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ================= STANDALONE JAVASCRIPT APPLICATION ================= -->
+  <script>
+    // --- Initial State & Storage Keys ---
+    const STORAGE_KEY_MEDS = 'medreminder_medications_v1';
+    const STORAGE_KEY_LOGS = 'medreminder_dose_logs_v1';
+    const STORAGE_KEY_SETTINGS = 'medreminder_settings_v1';
+
+    let state = {
+      lang: 'ar',
+      theme: 'light',
+      soundType: 'voice_ar',
+      medications: [],
+      doseLogs: [],
+      activeDueDose: null,
+      snoozedDoses: {}, // { 'medId_time': targetTimestamp }
+      currentTab: 'home',
+      selectedCalendarDate: getTodayDateString(),
+    };
+
+    // Built-in Drug Knowledge Base
+    const DRUG_DB = [
+      { id: '1', nameAr: 'باراسيتامول (Panadol)', nameEn: 'Paracetamol (Panadol)', catAr: 'مسكن وخافض للحرارة', catEn: 'Analgesic / Antipyretic', usesAr: 'تسكين الصداع، آلام الأسنان، وخفض درجات الحرارة.', usesEn: 'Relief of mild-to-moderate pain and fever.', storage: 'يحفظ في مكان جاف أقل من 25 درجة مئوية بعيداً عن الرطوبة.' },
+      { id: '2', nameAr: 'أوجمنتين (Augmentin)', nameEn: 'Augmentin (Amoxicillin/Clavulanate)', catAr: 'مضاد حيوي واسع المجال', catEn: 'Broad-spectrum Antibiotic', usesAr: 'علاج التهابات الجهاز التنفسي والمسالك والجيوب الأنفية.', usesEn: 'Bacterial infections including respiratory and ENT.', storage: 'الشراب يحفظ في الثلاجة (2-8 مئوية) لمدة 7 أيام بعد التحضير.' },
+      { id: '3', nameAr: 'كونكور (Concor - Bisoprolol)', nameEn: 'Concor (Bisoprolol)', catAr: 'علاج ضغط الدم والقلب', catEn: 'Beta-blocker (Hypertension)', usesAr: 'تنظيم ضربات القلب وخفض ضغط الدم المرتفع.', usesEn: 'High blood pressure and heart rate control.', storage: 'يحفظ في درجة حرارة الغرفة بعيداً عن أشعة الشمس المباشرة.' },
+      { id: '4', nameAr: 'ميتفورمين (Glucophage)', nameEn: 'Metformin (Glucophage)', catAr: 'منظم سكر الدم', catEn: 'Antidiabetic agent', usesAr: 'تنظيم مستوى الجلوكوز لمرضى السكري من النوع الثاني.', usesEn: 'Type 2 Diabetes glucose control.', storage: 'يفضل تناوله مع أو بعد الوجبات لتقليل اضطرابات المعدة.' },
+      { id: '5', nameAr: 'نيكسيوم (Nexium - Esomeprazole)', nameEn: 'Nexium (Esomeprazole)', catAr: 'مثبط مضخة البروتون (حموضة)', catEn: 'Proton Pump Inhibitor', usesAr: 'علاج ارتجاع المريء وقرحة المعدة والحموضة.', usesEn: 'Acid reflux and stomach ulcer treatment.', storage: 'يؤخذ صباحاً على معدة فارغة قبل الإفطار بـ 30 دقيقة.' }
+    ];
+
+    // --- Audio Synthesizer & Speech Synthesis ---
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function speakAnnouncement(medName, dose, lang) {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const text = lang === 'ar'
+          ? `تنبيه مؤقت MedReminder: حان موعد تناول دواء ${medName}، الجرعة المقررة ${dose}. نتمنى لك دوام الصحة والعافية.`
+          : `MedReminder alert: It is time to take your medicine ${medName}, dose ${dose}.`;
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.95;
+        u.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
+        window.speechSynthesis.speak(u);
+      } catch (e) {
+        console.warn('Speech error:', e);
+      }
+    }
+
+    function playSoundTone(soundType, medName, dose) {
+      try {
+        if ('vibrate' in navigator) {
+          navigator.vibrate([250, 100, 250, 100, 400]);
+        }
+      } catch {}
+
+      if (soundType === 'voice_ar') {
+        playToneHarmonics([523, 659], 0.2);
+        setTimeout(() => speakAnnouncement(medName || 'الدواء المقرر', dose || 'الجرعة', 'ar'), 300);
+        return;
+      }
+      if (soundType === 'voice_en') {
+        playToneHarmonics([523, 659], 0.2);
+        setTimeout(() => speakAnnouncement(medName || 'Scheduled Medicine', dose || 'Dose', 'en'), 300);
+        return;
+      }
+      if (soundType === 'gentle') {
+        playToneHarmonics([523.25, 659.25, 783.99, 1046.5], 0.4);
+        return;
+      }
+      if (soundType === 'digital') {
+        playToneHarmonics([880, 1174, 880, 1174], 0.15, 'square');
+        return;
+      }
+      if (soundType === 'urgent') {
+        playToneHarmonics([950, 950, 1200], 0.18, 'sawtooth');
+        return;
+      }
+      // default 'bell'
+      playToneHarmonics([659.25, 830.61, 987.77], 0.35);
+    }
+
+    function playToneHarmonics(frequencies, dur, type = 'sine') {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        frequencies.forEach((freq, idx) => {
+          const t = now + (idx * dur * 0.7);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + dur);
+        });
+      } catch (e) {
+        console.warn('Audio tone error:', e);
+      }
+    }
+
+    // --- Helper Utilities ---
+    function getTodayDateString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function formatTimeDisplay(timeStr) {
+      if (!timeStr) return '';
+      const [hStr, mStr] = timeStr.split(':');
+      let h = parseInt(hStr, 10);
+      const m = mStr || '00';
+      if (state.lang === 'ar') {
+        const ampm = h >= 12 ? 'م' : 'ص';
+        const h12 = h % 12 || 12;
+        return `${h12}:${m} ${ampm}`;
+      } else {
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${m} ${ampm}`;
+      }
+    }
+
+    function generateId() {
+      return 'med_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    }
+
+    // --- Data Persistence ---
+    function loadState() {
+      try {
+        const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          state.lang = parsed.lang || 'ar';
+          state.theme = parsed.theme || 'light';
+          state.soundType = parsed.soundType || 'voice_ar';
+        }
+        const savedMeds = localStorage.getItem(STORAGE_KEY_MEDS);
+        if (savedMeds) {
+          state.medications = JSON.parse(savedMeds);
+        } else {
+          // Initial Demo Data
+          state.medications = [
+            { id: '1', name: 'بنادول إكسترا (Panadol Extra)', dose: '500 ملغ قرص واحد', type: 'tablet', times: ['08:00', '14:00', '20:00'], quantity: 24, refillThreshold: 6, notes: 'يؤخذ بعد الأكل مع كوب ماء', isPaused: false },
+            { id: '2', name: 'كونكور (Concor)', dose: '5 ملغ نصف قرص', type: 'tablet', times: ['09:00'], quantity: 15, refillThreshold: 5, notes: 'صباحاً بانتظام لتنظيم الضغط', isPaused: false }
+          ];
+          saveMeds();
+        }
+        const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+        if (savedLogs) {
+          state.doseLogs = JSON.parse(savedLogs);
+        }
+      } catch (e) {
+        console.error('Failed to load state:', e);
+      }
+    }
+
+    function saveMeds() {
+      localStorage.setItem(STORAGE_KEY_MEDS, JSON.stringify(state.medications));
+    }
+    function saveLogs() {
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(state.doseLogs));
+    }
+    function saveSettings() {
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
+        lang: state.lang,
+        theme: state.theme,
+        soundType: state.soundType
+      }));
+    }
+
+    // --- Schedule & Dose Calculation ---
+    function getDosesForDate(dateStr) {
+      const list = [];
+      state.medications.forEach(med => {
+        if (med.isPaused) return;
+        med.times.forEach(time => {
+          const log = state.doseLogs.find(l => l.medicationId === med.id && l.scheduledDate === dateStr && l.scheduledTime === time);
+          list.push({
+            medication: med,
+            scheduledDate: dateStr,
+            scheduledTime: time,
+            status: log ? log.status : 'scheduled',
+            log: log || null
+          });
+        });
+      });
+      list.sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+      return list;
+    }
+
+    function findNextUpcomingDose() {
+      const today = getTodayDateString();
+      const todayDoses = getDosesForDate(today);
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      // Find first scheduled dose that is either upcoming or due now
+      for (const dose of todayDoses) {
+        if (dose.status === 'scheduled') {
+          return dose;
+        }
+      }
+      return null;
+    }
+
+    // --- Live Timer & Alarm Check ---
+    function checkLiveAlarms() {
+      const now = new Date();
+      const today = getTodayDateString();
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+      // Update Header Clock
+      const dtElem = document.getElementById('live-datetime');
+      if (dtElem) {
+        const timeFormatted = formatTimeDisplay(currentTimeStr);
+        const options = { weekday: 'long', month: 'short', day: 'numeric' };
+        const dateFormatted = now.toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-US', options);
+        dtElem.innerText = `${dateFormatted} • ${timeFormatted}:${String(now.getSeconds()).padStart(2, '0')}`;
+      }
+
+      // Check for due doses
+      const todayDoses = getDosesForDate(today);
+      todayDoses.forEach(dose => {
+        if (dose.status === 'scheduled') {
+          const doseKey = `${dose.medication.id}_${dose.scheduledTime}_${today}`;
+          const isSnoozed = state.snoozedDoses[doseKey] && Date.now() < state.snoozedDoses[doseKey];
+          
+          if (!isSnoozed && dose.scheduledTime === currentTimeStr && now.getSeconds() <= 2) {
+            // Trigger Alarm!
+            triggerDoseAlarm(dose);
+          }
+        }
+      });
+
+      renderNextMedicationHero();
+    }
+
+    function triggerDoseAlarm(dose) {
+      state.activeDueDose = dose;
+      const banner = document.getElementById('due-alarm-banner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        document.getElementById('due-alarm-title').innerText = `${dose.medication.name} (${dose.medication.dose})`;
+        document.getElementById('due-alarm-notes').innerText = dose.medication.notes || '';
+      }
+
+      // Play Sound & Announce
+      playSoundTone(state.soundType, dose.medication.name, dose.medication.dose);
+
+      // Send Browser Notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(state.lang === 'ar' ? '💊 موعد تناول الدواء الآن!' : '💊 Medication Due Now!', {
+            body: `${dose.medication.name} (${dose.medication.dose})`,
+            icon: 'favicon.ico'
+          });
+        } catch {}
+      }
+    }
+
+    // --- Dose Actions ---
+    function recordDoseAction(medId, scheduledTime, action) {
+      const today = getTodayDateString();
+      const existingIdx = state.doseLogs.findIndex(l => l.medicationId === medId && l.scheduledDate === today && l.scheduledTime === scheduledTime);
+      
+      const logEntry = {
+        id: generateId(),
+        medicationId: medId,
+        scheduledDate: today,
+        scheduledTime: scheduledTime,
+        status: action, // 'taken' | 'skipped'
+        takenTimestamp: Date.now()
+      };
+
+      if (existingIdx >= 0) {
+        state.doseLogs[existingIdx] = logEntry;
+      } else {
+        state.doseLogs.push(logEntry);
+      }
+
+      // Decrement quantity if taken
+      if (action === 'taken') {
+        const med = state.medications.find(m => m.id === medId);
+        if (med && typeof med.quantity === 'number' && med.quantity > 0) {
+          med.quantity -= 1;
+          saveMeds();
+        }
+      }
+
+      saveLogs();
+
+      // Dismiss banner if this was the active due dose
+      if (state.activeDueDose && state.activeDueDose.medication.id === medId && state.activeDueDose.scheduledTime === scheduledTime) {
+        state.activeDueDose = null;
+        document.getElementById('due-alarm-banner').classList.add('hidden');
+      }
+
+      renderAllViews();
+    }
+
+    function snoozeDose(medId, scheduledTime, minutes = 10) {
+      const today = getTodayDateString();
+      const key = `${medId}_${scheduledTime}_${today}`;
+      state.snoozedDoses[key] = Date.now() + (minutes * 60 * 1000);
+      
+      if (state.activeDueDose && state.activeDueDose.medication.id === medId) {
+        state.activeDueDose = null;
+        document.getElementById('due-alarm-banner').classList.add('hidden');
+      }
+
+      alert(state.lang === 'ar' ? `تم تأجيل التنبيه لمدة ${minutes} دقائق.` : `Snoozed for ${minutes} minutes.`);
+      renderAllViews();
+    }
+
+    // --- Rendering Views ---
+    function renderNextMedicationHero() {
+      const nextDose = findNextUpcomingDose();
+      const container = document.getElementById('next-med-content');
+      const actionsContainer = document.getElementById('next-med-actions');
+      const badgeTime = document.getElementById('next-med-badge-time');
+
+      if (!container || !actionsContainer) return;
+
+      if (!nextDose) {
+        badgeTime.innerText = '';
+        container.innerHTML = `
+          <div class="py-2">
+            <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">
+              ${state.lang === 'ar' ? 'لا توجد جرعات متبقية لليوم 🎉' : 'No remaining doses for today 🎉'}
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              ${state.lang === 'ar' ? 'رائع! لقد أخذت جميع الجرعات المجدولة لليوم بنجاح.' : 'Great! All doses for today have been completed.'}
+            </p>
+          </div>
+        `;
+        actionsContainer.innerHTML = `
+          <button onclick="openAddModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer">
+            + ${state.lang === 'ar' ? 'إضافة دواء جديد' : 'Add Medication'}
+          </button>
+        `;
+        return;
+      }
+
+      const med = nextDose.medication;
+      badgeTime.innerText = formatTimeDisplay(nextDose.scheduledTime);
+
+      container.innerHTML = `
+        <h2 class="text-xl font-black text-slate-900 dark:text-white">
+          ${med.name}
+        </h2>
+        <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+          ${med.dose} • ${formatTimeDisplay(nextDose.scheduledTime)}
+        </p>
+        ${med.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 bg-slate-50 dark:bg-slate-800/80 p-2 rounded-xl border border-slate-100 dark:border-slate-800">💡 ${med.notes}</p>` : ''}
+      `;
+
+      actionsContainer.innerHTML = `
+        <button onclick="recordDoseAction('${med.id}', '${nextDose.scheduledTime}', 'taken')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5">
+          <span>✅</span>
+          <span>${state.lang === 'ar' ? 'تم أخذ الجرعة' : 'Mark as Taken'}</span>
+        </button>
+        <button onclick="snoozeDose('${med.id}', '${nextDose.scheduledTime}', 10)" class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold cursor-pointer">
+          ⏳ ${state.lang === 'ar' ? 'تأجيل 10د' : 'Snooze 10m'}
+        </button>
+        <button onclick="recordDoseAction('${med.id}', '${nextDose.scheduledTime}', 'skipped')" class="px-3 py-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer">
+          ${state.lang === 'ar' ? 'تخطي' : 'Skip'}
+        </button>
+      `;
+    }
+
+    function renderTodaySchedule() {
+      const today = getTodayDateString();
+      const doses = getDosesForDate(today);
+      const listElem = document.getElementById('today-schedule-list');
+      if (!listElem) return;
+
+      if (doses.length === 0) {
+        listElem.innerHTML = `
+          <div class="text-center py-6 text-xs text-slate-400">
+            ${state.lang === 'ar' ? 'لا توجد أدوية مضافة بعد. انقر إضافة دواء للبدء.' : 'No medications added yet.'}
+          </div>
+        `;
+        return;
+      }
+
+      listElem.innerHTML = doses.map(dose => {
+        const med = dose.medication;
+        const isTaken = dose.status === 'taken';
+        const isSkipped = dose.status === 'skipped';
+
+        let statusBadge = `<span class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 px-2.5 py-1 rounded-lg">${formatTimeDisplay(dose.scheduledTime)}</span>`;
+        if (isTaken) {
+          statusBadge = `<span class="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-300">✅ تم الأخذ</span>`;
+        } else if (isSkipped) {
+          statusBadge = `<span class="text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 px-2.5 py-1 rounded-lg">تخطي</span>`;
+        }
+
+        return `
+          <div class="p-3.5 rounded-2xl border ${isTaken ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/60'} flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate ${isTaken ? 'line-through opacity-70' : ''}">${med.name}</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">${med.dose} • ${formatTimeDisplay(dose.scheduledTime)}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${statusBadge}
+              ${!isTaken && !isSkipped ? `
+                <button onclick="recordDoseAction('${med.id}', '${dose.scheduledTime}', 'taken')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer active:scale-95">
+                  أخذ
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAdherenceGauge() {
+      const today = getTodayDateString();
+      const doses = getDosesForDate(today);
+      const taken = doses.filter(d => d.status === 'taken').length;
+      const missed = doses.filter(d => d.status === 'missed').length;
+      const total = doses.length;
+      const rate = total > 0 ? Math.round((taken / total) * 100) : 100;
+
+      document.getElementById('adherence-percent').innerText = `${rate}%`;
+      document.getElementById('stat-taken-count').innerText = taken;
+      document.getElementById('stat-missed-count').innerText = missed;
+      document.getElementById('stat-total-count').innerText = total;
+    }
+
+    function renderMedicationsGrid() {
+      const grid = document.getElementById('medications-grid');
+      if (!grid) return;
+
+      if (state.medications.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-10 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+            <p class="text-xs text-slate-400">${state.lang === 'ar' ? 'لم تقم بإضافة أي أدوية بعد.' : 'No medications yet.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = state.medications.map(med => {
+        const lowStock = typeof med.quantity === 'number' && typeof med.refillThreshold === 'number' && med.quantity <= med.refillThreshold;
+        return `
+          <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-3 bento-card">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-1.5">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white">${med.name}</h3>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800">${med.dose}</span>
+              </div>
+              
+              <div class="flex flex-wrap gap-1.5 my-2">
+                ${med.times.map(t => `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded-md font-mono">${formatTimeDisplay(t)}</span>`).join('')}
+              </div>
+
+              ${med.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl">💡 ${med.notes}</p>` : ''}
+              
+              ${typeof med.quantity === 'number' ? `
+                <div class="mt-3 text-xs flex items-center justify-between font-semibold ${lowStock ? 'text-rose-600' : 'text-slate-500'}">
+                  <span>المخزون المتوفر: ${med.quantity} حبة</span>
+                  ${lowStock ? '<span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">⚠️ مخزون منخفض</span>' : ''}
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              <button onclick="editMedication('${med.id}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold cursor-pointer">
+                تعديل
+              </button>
+              <button onclick="deleteMedication('${med.id}')" class="px-3 py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl text-xs font-bold cursor-pointer">
+                حذف
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderGuideDrugs(filter = '') {
+      const container = document.getElementById('guide-drugs-list');
+      if (!container) return;
+
+      const q = filter.toLowerCase().trim();
+      const filtered = DRUG_DB.filter(d => !q || d.nameAr.toLowerCase().includes(q) || d.nameEn.toLowerCase().includes(q) || d.catAr.toLowerCase().includes(q));
+
+      container.innerHTML = filtered.map(d => `
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/70 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${state.lang === 'ar' ? d.nameAr : d.nameEn}</h4>
+              <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">${state.lang === 'ar' ? d.catAr : d.catEn}</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-700 dark:text-slate-300">📋 ${state.lang === 'ar' ? d.usesAr : d.usesEn}</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 p-2 rounded-xl">🧊 ${d.storage}</p>
+        </div>
+      `).join('');
+    }
+
+    function filterGuideDrugs() {
+      const q = document.getElementById('guide-search-input').value;
+      renderGuideDrugs(q);
+    }
+
+    function renderAllViews() {
+      renderNextMedicationHero();
+      renderTodaySchedule();
+      renderAdherenceGauge();
+      renderMedicationsGrid();
+      renderGuideDrugs();
+    }
+
+    // --- Tab Navigation ---
+    function switchTab(tabId) {
+      state.currentTab = tabId;
+      ['home', 'medications', 'calendar', 'guide', 'settings'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`nav-btn-${t}`);
+        if (sec) sec.classList.toggle('hidden', t !== tabId);
+        if (btn) {
+          if (t === tabId) {
+            btn.className = 'nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] cursor-pointer';
+          } else {
+            btn.className = 'nav-item flex flex-col items-center py-1 px-3 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium text-[11px] cursor-pointer';
+          }
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- Modal Management ---
+    function openAddModal() {
+      document.getElementById('med-id').value = '';
+      document.getElementById('modal-title').innerText = state.lang === 'ar' ? 'إضافة دواء جديد' : 'Add New Medication';
+      document.getElementById('form-name').value = '';
+      document.getElementById('form-dose').value = '';
+      document.getElementById('form-quantity').value = '';
+      document.getElementById('form-threshold').value = '';
+      document.getElementById('form-notes').value = '';
+      
+      const timesContainer = document.getElementById('form-times-container');
+      timesContainer.innerHTML = '';
+      addTimeInput('08:00');
+
+      document.getElementById('med-modal').classList.remove('hidden');
+    }
+
+    function closeMedModal() {
+      document.getElementById('med-modal').classList.add('hidden');
+    }
+
+    function addTimeInput(defaultVal = '12:00') {
+      const container = document.getElementById('form-times-container');
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2';
+      div.innerHTML = `
+        <input type="time" required value="${defaultVal}" class="med-time-input flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono text-xs focus:outline-none" />
+        <button type="button" onclick="this.parentElement.remove()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl cursor-pointer">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function editMedication(medId) {
+      const med = state.medications.find(m => m.id === medId);
+      if (!med) return;
+
+      document.getElementById('med-id').value = med.id;
+      document.getElementById('modal-title').innerText = state.lang === 'ar' ? 'تعديل الدواء' : 'Edit Medication';
+      document.getElementById('form-name').value = med.name;
+      document.getElementById('form-dose').value = med.dose;
+      document.getElementById('form-type').value = med.type || 'tablet';
+      document.getElementById('form-quantity').value = med.quantity || '';
+      document.getElementById('form-threshold').value = med.refillThreshold || '';
+      document.getElementById('form-notes').value = med.notes || '';
+
+      const container = document.getElementById('form-times-container');
+      container.innerHTML = '';
+      med.times.forEach(t => addTimeInput(t));
+
+      document.getElementById('med-modal').classList.remove('hidden');
+    }
+
+    function deleteMedication(medId) {
+      if (confirm(state.lang === 'ar' ? 'هل أنت متأكد من حذف هذا الدواء؟' : 'Delete this medication?')) {
+        state.medications = state.medications.filter(m => m.id !== medId);
+        saveMeds();
+        renderAllViews();
+      }
+    }
+
+    function handleSaveMedication(e) {
+      e.preventDefault();
+      const id = document.getElementById('med-id').value || generateId();
+      const name = document.getElementById('form-name').value.trim();
+      const dose = document.getElementById('form-dose').value.trim();
+      const type = document.getElementById('form-type').value;
+      const notes = document.getElementById('form-notes').value.trim();
+      const qtyStr = document.getElementById('form-quantity').value;
+      const threshStr = document.getElementById('form-threshold').value;
+
+      const timeInputs = document.querySelectorAll('.med-time-input');
+      const times = Array.from(timeInputs).map(inp => inp.value).filter(Boolean);
+
+      if (times.length === 0) {
+        alert(state.lang === 'ar' ? 'يرجى تحديد وقت واحد على الأقل للجرعة.' : 'Please add at least one dose time.');
+        return;
+      }
+
+      const medObj = {
+        id,
+        name,
+        dose,
+        type,
+        times: Array.from(new Set(times)).sort(),
+        notes,
+        quantity: qtyStr ? parseInt(qtyStr, 10) : undefined,
+        refillThreshold: threshStr ? parseInt(threshStr, 10) : undefined,
+        isPaused: false
+      };
+
+      const existingIdx = state.medications.findIndex(m => m.id === id);
+      if (existingIdx >= 0) {
+        state.medications[existingIdx] = medObj;
+      } else {
+        state.medications.push(medObj);
+      }
+
+      saveMeds();
+      closeMedModal();
+      renderAllViews();
+    }
+
+    // --- Settings & Sound Actions ---
+    function saveSettingSoundType(val) {
+      state.soundType = val;
+      saveSettings();
+    }
+
+    function testAlarmDemo() {
+      playSoundTone(state.soundType, 'بنادول إكسترا', '500 ملغ قرص واحد');
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🔔 MedReminder - اختبار التنبيه', {
+          body: 'يعمل نظام الإشعارات والتنبيه الصوتي بنجاح!',
+          icon: 'favicon.ico'
+        });
+      }
+    }
+
+    function requestNotificationPermission() {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(perm => {
+          document.getElementById('notif-perm-status').innerText = `الحالة: ${perm}`;
+        });
+      }
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.classList.toggle('dark', state.theme === 'dark');
+      document.getElementById('theme-icon').innerText = state.theme === 'dark' ? '☀️' : '🌙';
+      saveSettings();
+    }
+
+    function toggleLang() {
+      state.lang = state.lang === 'ar' ? 'en' : 'ar';
+      document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = state.lang;
+      document.getElementById('lang-btn-txt').innerText = state.lang === 'ar' ? 'English' : 'العربية';
+      saveSettings();
+      renderAllViews();
+    }
+
+    // --- Backup JSON Export / Import ---
+    function exportBackupData() {
+      const data = {
+        medications: state.medications,
+        doseLogs: state.doseLogs,
+        settings: { lang: state.lang, theme: state.theme, soundType: state.soundType },
+        exportedAt: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `medreminder_backup_${getTodayDateString()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackupData(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.medications && Array.isArray(parsed.medications)) {
+            state.medications = parsed.medications;
+            saveMeds();
+          }
+          if (parsed.doseLogs && Array.isArray(parsed.doseLogs)) {
+            state.doseLogs = parsed.doseLogs;
+            saveLogs();
+          }
+          alert(state.lang === 'ar' ? 'تم استيراد النسخة الاحتياطية بنجاح!' : 'Backup restored successfully!');
+          renderAllViews();
+        } catch {
+          alert('الملف غير صالح.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function loadSampleDemoData() {
+      state.medications = [
+        { id: '1', name: 'بنادول إكسترا (Panadol Extra)', dose: '500 ملغ قرص واحد', type: 'tablet', times: ['08:00', '14:00', '20:00'], quantity: 20, refillThreshold: 5, notes: 'يؤخذ بعد الأكل لتسكين الصداع', isPaused: false },
+        { id: '2', name: 'أوجمنتين (Augmentin)', dose: '1 غرام قرص', type: 'tablet', times: ['09:00', '21:00'], quantity: 14, refillThreshold: 4, notes: 'مضاد حيوي كل 12 ساعة بانتظام', isPaused: false },
+        { id: '3', name: 'كونكور (Concor)', dose: '5 ملغ', type: 'tablet', times: ['08:30'], quantity: 30, refillThreshold: 7, notes: 'صباحاً للضغط', isPaused: false },
+        { id: '4', name: 'فيتامين د (Vitamin D3)', dose: '50000 وحدة كبسولة', type: 'capsule', times: ['12:00'], quantity: 4, refillThreshold: 2, notes: 'كبسولة أسبوعياً بعد وجبة دسمة', isPaused: false }
+      ];
+      saveMeds();
+      alert('تم تحميل البيانات التجريبية بنجاح!');
+      renderAllViews();
+    }
+
+    // --- Banner Action Button Handlers ---
+    document.getElementById('btn-due-take')?.addEventListener('click', () => {
+      if (state.activeDueDose) {
+        recordDoseAction(state.activeDueDose.medication.id, state.activeDueDose.scheduledTime, 'taken');
+      }
+    });
+    document.getElementById('btn-due-snooze')?.addEventListener('click', () => {
+      if (state.activeDueDose) {
+        snoozeDose(state.activeDueDose.medication.id, state.activeDueDose.scheduledTime, 10);
+      }
+    });
+    document.getElementById('btn-due-skip')?.addEventListener('click', () => {
+      if (state.activeDueDose) {
+        recordDoseAction(state.activeDueDose.medication.id, state.activeDueDose.scheduledTime, 'skipped');
+      }
+    });
+
+    // --- App Bootstrap ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      
+      // Apply initial theme & lang
+      document.documentElement.classList.toggle('dark', state.theme === 'dark');
+      document.getElementById('theme-icon').innerText = state.theme === 'dark' ? '☀️' : '🌙';
+      document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+      document.getElementById('setting-sound-type').value = state.soundType;
+
+      renderAllViews();
+
+      // Start 1-second live checking loop
+      setInterval(checkLiveAlarms, 1000);
+      checkLiveAlarms();
+    });
+  </script>
+</body>
+</html>
